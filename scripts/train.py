@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 import torch
+import pandas as pd
 
 # Ensure project root is on PYTHONPATH when running as a script.
 ROOT = Path(__file__).resolve().parent.parent
@@ -42,6 +43,7 @@ def main() -> None:
     epsilon_decay = 0.995
 
     rewards_log: list[float] = []
+    results: list[dict] = []
     log_dir = Path("logs")
     ensure_log_dir(log_dir)
 
@@ -76,10 +78,16 @@ def main() -> None:
             f"Episode {episode} | Total Reward: {total_reward:.2f} | Epsilon: {epsilon:.3f}"
         )
 
+        results.append({"episode": episode, "reward": total_reward, "epsilon": epsilon})
+
         if episode % 50 == 0:
             torch.save(agent.q_network.state_dict(), log_dir / "q_network.pth")
 
     save_rewards_csv(rewards_log, log_dir / "rewards.csv")
+
+    df = pd.DataFrame(results)
+    ensure_log_dir(log_dir)
+    df.to_csv(log_dir / "training_results.csv", index=False)
 
 
 if __name__ == "__main__":
