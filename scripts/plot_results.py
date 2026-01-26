@@ -25,7 +25,7 @@ def main() -> None:
         linewidth=2.5,
         label="50-Ep Moving Avg",
     )
-    plt.title("DeepEE-X Training Convergence")
+    plt.title("GreenHPC-RL: Training Convergence")
     plt.xlabel("Episode")
     plt.ylabel("Total Reward")
     plt.legend()
