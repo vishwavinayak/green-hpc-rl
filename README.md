@@ -72,7 +72,7 @@ The agent perceives a 21-dimensional state vector (for 10 servers):
 | `next_job` | Resource requirement of the incoming task | 1 |
 
 ### Network Structure
-We implemented a custom PyTorch architecture in `src/agents/networks.py`:
+Implemented a custom PyTorch architecture in `src/agents/networks.py`:
 1.  **Actor-Param Network:** Maps `State` $\to$ `Continuous Parameters` (Airflow).
 2.  **Q-Network:** Maps `State + Parameters` $\to$ `Q-Values` (Server Selection).
 
