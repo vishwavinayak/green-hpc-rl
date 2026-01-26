@@ -78,7 +78,10 @@ We implemented a custom PyTorch architecture in `src/agents/networks.py`:
 
 ### Loss Function
 The agent minimizes a hybrid loss function:
-$$ \mathcal{L} = \mathcal{L}_{Q}(\text{MSE}) + \mathcal{L}_{Actor}(-Q_{val}) $$
+
+$$
+\mathcal{L} = \mathcal{L}_{Q}(\text{MSE}) + \mathcal{L}_{\text{Actor}}(-Q_{\text{val}})
+$$
 
 ---
 
