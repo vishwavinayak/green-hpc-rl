@@ -9,7 +9,6 @@
 
 **Deep Reinforcement Learning (DRL) for Intelligent Load Balancing and Cooling Optimization in Data Centers.**
 
-> **Note:** This project was developed as a technical proposal for the **CERN openlab Summer Student Programme 2026**. It demonstrates a novel approach to reducing the energy footprint of WLCG Tier-0 data centers.
 
 ---
 
