@@ -11,3 +11,10 @@ wheels/
 
 data/
 env/
+
+
+logs/*
+data/*
+
+!logs/*.png
+!logs/.gitkeep
