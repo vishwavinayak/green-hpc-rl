@@ -43,8 +43,9 @@ A custom environment (`src/envs/physics.py`) simulates data center thermodynamic
 
 ---
 
-## 📊 Performance Results
+## 📊 Results
 
+### Part A: Training Convergence
 The agent was trained for 500 episodes using Google Workload traces. The learning curve below demonstrates the agent's ability to converge from a random policy to an energy-optimized policy.
 
 ![Training Curve](logs/learning_curve.png)
@@ -52,6 +53,12 @@ The agent was trained for 500 episodes using Google Workload traces. The learnin
 *   **X-Axis:** Training Episodes (0-500).
 *   **Y-Axis:** Total Reward (Negative Energy Cost).
 *   **Trend:** The agent successfully learned to balance thermal safety constraints (<30°C) with minimal energy usage, improving the reward from **-355k** (baseline) to **-335k** (optimized).
+
+### Part B: Impact Analysis (AI vs. Baseline)
+![AI vs Baseline](logs/final_comparison.png)
+
+*   **Energy Analysis:** The Baseline consumed **346.3 kW**, while the GreenHPC-RL Agent consumed **322.3 kW**, yielding **6.95% Energy Savings**.
+*   **Thermal Analysis:** The Baseline heatmap (left) shows red hotspots from poor scheduling; the GreenHPC-RL heatmap (right) stays uniformly blue because the agent distributes load to avoid thermal spikes.
 
 ---
 
@@ -85,6 +92,8 @@ green-hpc-rl/
 ├── logs/                         # Training curves and saved models
 ├── scripts/
 │   ├── train.py                  # Main training loop
+│   ├── evaluate.py               # Benchmark AI vs baseline
+│   ├── plot_benchmark.py         # Visualization of benchmark results
 │   └── plot_results.py           # Visualization tools
 ├── src/
 │   ├── agents/
@@ -124,7 +133,14 @@ uv run python scripts/train.py
 # Output: Training logs will appear in console and save to logs/
 ```
 
-### 4. Visualizing Results
+### 4. Running the Benchmark
+```bash
+uv run python scripts/evaluate.py
+uv run python scripts/plot_benchmark.py
+# Output: Generates logs/benchmark_stats.csv and logs/final_comparison.png
+```
+
+### 5. Visualizing Results
 ```bash
 uv run python scripts/plot_results.py
 # Output: Generates logs/learning_curve.png
