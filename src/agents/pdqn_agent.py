@@ -108,7 +108,8 @@ class PDQNAgent:
             next_action_params = self.target_actor(next_states)
             next_q_values = self.target_q_network(next_states, next_action_params)
             max_next_q = next_q_values.max(dim=1, keepdim=True).values
-            target_q = rewards.unsqueeze(1) + self.gamma * max_next_q * (~dones).float()
+            not_done = (~dones).float().unsqueeze(1)
+            target_q = rewards.unsqueeze(1) + self.gamma * max_next_q * not_done
 
         current_q_values = self.q_network(states, continuous_params)
         current_q = current_q_values.gather(1, discrete_actions.long().unsqueeze(1))
