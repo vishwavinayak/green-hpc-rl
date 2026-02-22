@@ -1,9 +1,9 @@
-import os
 import sys
 from pathlib import Path
 
-import torch
+import numpy as np
 import pandas as pd
+import torch
 
 # Ensure project root is on PYTHONPATH when running as a script.
 ROOT = Path(__file__).resolve().parent.parent
@@ -11,11 +11,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.agents.pdqn_agent import PDQNAgent
-from src.envs.hybrid_dc import HybridDataCenterEnv
+from src.envs.hybrid_dc import LLNLThunderEnv
 
-MAX_EPISODES = 500
+MAX_EPISODES = 1000
 MAX_STEPS = 200
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 
 
 def ensure_log_dir(path: Path) -> None:
@@ -31,12 +31,28 @@ def save_rewards_csv(rewards: list[float], path: Path) -> None:
 
 
 def main() -> None:
-    env = HybridDataCenterEnv()
-    state_size = env.observation_space.shape[0]
-    n_servers = env.n_servers
-    action_param_size = env.action_space[1].shape[0]
+    env = LLNLThunderEnv(workload_path=Path("data/raw/LLNL-Thunder-2007-1.1-cln.swf"))
+    state_size = int(
+        env.observation_space.shape[0]
+    )  # ~1682 (job_req + airflow + loads + temps)
+    n_servers = int(env.TOTAL_SERVERS)  # 840 discrete actions
+    action_param_size = int(env.action_space[1].shape[0])
 
-    agent = PDQNAgent(state_size, n_servers, action_param_size)
+    device = torch.device(
+        "mps"
+        if torch.backends.mps.is_available()
+        else "cuda"
+        if torch.cuda.is_available()
+        else "cpu"
+    )
+
+    agent = PDQNAgent(
+        state_size,
+        n_servers,
+        action_param_size,
+        batch_size=BATCH_SIZE,
+        device=device,
+    )
 
     epsilon = 1.0
     epsilon_min = 0.01
@@ -74,11 +90,25 @@ def main() -> None:
 
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
 
+        avg_temp = float(np.mean(env.temps))
+        max_temp = float(np.max(env.temps))
+        avg_util = float(np.mean(env.cpu_load))
+
         print(
-            f"Episode {episode} | Total Reward: {total_reward:.2f} | Epsilon: {epsilon:.3f}"
+            f"Episode {episode} | Reward: {total_reward:.2f} | Epsilon: {epsilon:.3f} "
+            f"| AvgTemp: {avg_temp:.2f} | MaxTemp: {max_temp:.2f} | AvgUtil: {avg_util:.3f}"
         )
 
-        results.append({"episode": episode, "reward": total_reward, "epsilon": epsilon})
+        results.append(
+            {
+                "episode": episode,
+                "reward": total_reward,
+                "epsilon": epsilon,
+                "avg_temp": avg_temp,
+                "max_temp": max_temp,
+                "avg_util": avg_util,
+            }
+        )
 
         if episode % 50 == 0:
             torch.save(agent.q_network.state_dict(), log_dir / "q_network.pth")
