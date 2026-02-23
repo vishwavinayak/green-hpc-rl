@@ -23,6 +23,7 @@ class HybridDataCenterEnv(gym.Env):
         self.physics = ThermalPhysics()
         self.workload = WorkloadGenerator(str(workload_path))
         self.n_servers = 10
+        self.TOTAL_SERVERS = self.n_servers
 
         obs_dim = self.n_servers * 2 + 1
         self.observation_space = gym.spaces.Box(
@@ -38,6 +39,8 @@ class HybridDataCenterEnv(gym.Env):
         self.server_loads = np.zeros(self.n_servers, dtype=np.float32)
         self.server_temps = np.full(self.n_servers, 20.0, dtype=np.float32)
         self.next_job_size = float(self.workload.step())
+        # Expose temps attribute for compatibility with evaluation scripts.
+        self.temps = self.server_temps
 
     def _get_obs(self) -> np.ndarray:
         temps_norm = np.clip(self.server_temps / 100.0, 0.0, 1.0)
@@ -88,6 +91,9 @@ class HybridDataCenterEnv(gym.Env):
             "cooling_power": cooling_power,
             "penalty": penalty,
             "total_power": total_power,
+            # Compatibility keys expected by evaluation script
+            "p_it_sum": it_power,
+            "p_cooling": cooling_power,
         }
         return obs, reward, terminated, truncated, info
 
@@ -100,3 +106,8 @@ class HybridDataCenterEnv(gym.Env):
 
     def render(self):  # pragma: no cover - not required
         return None
+
+
+# Alias for compatibility with evaluation scripts expecting LLNLThunderEnv
+class LLNLThunderEnv(HybridDataCenterEnv):
+    pass
