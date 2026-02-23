@@ -1,24 +1,27 @@
-from typing import Sequence, Tuple
+from __future__ import annotations
+
+from typing import Tuple
+
+import numpy as np
+
 
 class BaselineAgent:
-    """Rule-based baseline using round-robin scheduling and reactive airflow."""
+    """Rule-based baseline: round-robin scheduling with simple thermal reaction."""
 
-    def __init__(self, n_servers: int) -> None:
-        if n_servers <= 0:
-            raise ValueError("n_servers must be positive")
-        self.n_servers = n_servers
+    def __init__(self, action_dim: int = 840) -> None:
+        if action_dim <= 0:
+            raise ValueError("action_dim must be positive")
+        self.action_dim = action_dim
         self._counter = 0
 
-    def select_action(self, state: Sequence[float]) -> Tuple[int, list[float]]:
-        if len(state) < 20:
-            raise ValueError(
-                "state must contain at least 20 elements for temperature parsing"
-            )
-
-        server_index = self._counter % self.n_servers
+    def select_action(self, state: np.ndarray) -> Tuple[int, list[float]]:
+        # Round-robin server selection.
+        server_index = self._counter % self.action_dim
         self._counter += 1
 
-        temps = state[10 : 10 + self.n_servers]
-        airflow = 0.9 if any(t > 25.0 for t in temps) else 0.3
+        # Temperatures live in indices 842:1682 for the 840-server env.
+        temps = state[842:1682]
+        max_temp = float(np.max(temps)) if temps.size else 0.0
 
+        airflow = 0.9 if max_temp > 28.0 else 0.3
         return server_index, [airflow]
