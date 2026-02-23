@@ -83,7 +83,7 @@ def _run_episode(
         power_readings.append(power)
 
         if record_heatmap:
-            heatmap.append(temps.copy())
+            heatmap.append(env.cpu_load.copy())
 
         total_reward += float(reward)
         state = next_state
@@ -132,8 +132,10 @@ def main() -> None:
         if heat_ai:
             heatmap_ai = heat_ai
 
-        total_reward_base, max_temp_base, sla_base, heat_base, power_base = _run_episode(
-            env_base, baseline_policy, record_heatmap=episode == N_EPISODES
+        total_reward_base, max_temp_base, sla_base, heat_base, power_base = (
+            _run_episode(
+                env_base, baseline_policy, record_heatmap=episode == N_EPISODES
+            )
         )
         if heat_base:
             heatmap_base = heat_base
@@ -153,7 +155,9 @@ def main() -> None:
                 "Agent": "Baseline",
                 "Episode": episode,
                 "TotalReward": total_reward_base,
-                "AvgPower_kW": float(np.mean(power_base)) / 1000.0 if power_base else 0.0,
+                "AvgPower_kW": float(np.mean(power_base)) / 1000.0
+                if power_base
+                else 0.0,
                 "MaxTemp": max_temp_base,
                 "SLA_Violations": sla_base,
             }
@@ -166,14 +170,16 @@ def main() -> None:
     if heatmap_ai:
         heat_ai_arr = np.stack(heatmap_ai, axis=0)  # (T, 840)
         heat_ai_rack = heat_ai_arr.reshape(heat_ai_arr.shape[0], 20, 42).mean(axis=2)
-        np.save(LOG_DIR / "heatmap_ai.npy", heat_ai_rack)
-        print(f"Saved AI heatmap to {LOG_DIR / 'heatmap_ai.npy'}")
+        np.save(LOG_DIR / "load_map_ai.npy", heat_ai_rack)
+        print(f"Saved AI load map to {LOG_DIR / 'load_map_ai.npy'}")
 
     if heatmap_base:
         heat_base_arr = np.stack(heatmap_base, axis=0)  # (T, 840)
-        heat_base_rack = heat_base_arr.reshape(heat_base_arr.shape[0], 20, 42).mean(axis=2)
-        np.save(LOG_DIR / "heatmap_baseline.npy", heat_base_rack)
-        print(f"Saved baseline heatmap to {LOG_DIR / 'heatmap_baseline.npy'}")
+        heat_base_rack = heat_base_arr.reshape(heat_base_arr.shape[0], 20, 42).mean(
+            axis=2
+        )
+        np.save(LOG_DIR / "load_map_baseline.npy", heat_base_rack)
+        print(f"Saved baseline load map to {LOG_DIR / 'load_map_baseline.npy'}")
 
 
 if __name__ == "__main__":
