@@ -117,6 +117,9 @@ class LLNLThunderEnv(gym.Env):
         super().__init__()
 
         self.physics = ThermalPhysics()
+        self.alpha_heat = 0.005  # slower heating
+        self.beta_cool = 0.2  # stronger cooling
+        self.passive_cool = 0.05  # natural convection toward ambient
         self.workload = ThunderWorkloadLoader(
             str(workload_path), core_normalizer=core_normalizer, chunk_size=chunk_size
         )
@@ -154,26 +157,41 @@ class LLNLThunderEnv(gym.Env):
         airflow_value = float(np.array(airflow).reshape(-1)[0])
         airflow_value = float(np.clip(airflow_value, 0.0, 1.0))
 
-        # Assign job to server (accumulate utilization, clamp to [0,1]).
-        self.cpu_load[server_idx] = float(
-            np.clip(self.cpu_load[server_idx] + self.next_job_req, 0.0, 1.0)
+        reward = 0.0
+
+        # Task assignment with fallback to avoid dropping jobs.
+        if self.cpu_load[server_idx] + self.next_job_req <= 1.0:
+            target_idx = server_idx
+        else:
+            target_idx = int(np.argmin(self.cpu_load))
+            reward -= 5.0  # scheduling error penalty
+
+        self.cpu_load[target_idx] = float(
+            np.clip(self.cpu_load[target_idx] + self.next_job_req, 0.0, 1.0)
         )
 
         it_power = 0.0
         for i in range(self.n_servers):
             server_power = self.physics.calculate_power(float(self.cpu_load[i]))
-            self.temps[i] = float(
-                self.physics.update_temperature(
-                    float(self.temps[i]), server_power, airflow_value
-                )
+            temp = float(self.temps[i])
+            ambient = float(self.physics.ambient_temp_c)
+            temp_new = (
+                temp
+                + self.alpha_heat * server_power
+                - self.beta_cool * airflow_value * temp
+                - self.passive_cool * (temp - ambient)
             )
+            self.temps[i] = temp_new
             it_power += server_power
+
+        # Prevent runaway temperatures during simulation math.
+        self.temps = np.clip(self.temps, 20.0, 100.0)
 
         cooling_power = airflow_value * MAX_POWER * self.n_servers
         total_power = it_power + cooling_power
 
         penalty = 1.0 if np.any(self.temps > 30.0) else 0.0
-        reward = -total_power - 100.0 * penalty
+        reward = reward - total_power - 100.0 * penalty
 
         # Advance workload.
         self.next_job_req, self.next_job_runtime = self.workload.step()
