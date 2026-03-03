@@ -39,7 +39,8 @@ This repository presents a two-phase development process, from prototype validat
 
 The agent converged from a random policy to a stable energy-optimised policy, confirming that P-DQN can successfully navigate the hybrid (discrete + continuous) action space.
 
-![Phase 1 Training Curve](logs/v1_google/learning_curve.png)
+![Phase 1 Training Curve](/logs/v1_google/learning_curve.png)
+![Phase 1 comparison](logs/v1_google/final_comparison.png)
 
 *   **Y-Axis:** Total Reward (Negative Energy Cost). Higher is better.
 *   **Trend:** Reward rose from ~-355k (random) to ~-335k (optimised), representing a **~7% reduction** in cumulative energy cost relative to the Round-Robin baseline.
