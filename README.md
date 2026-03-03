@@ -5,8 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c)
 ![Algorithm](https://img.shields.io/badge/Algorithm-P--DQN-green)
-![Phase](https://img.shields.io/badge/Phase-2%20Research%20Scale-purple)
-![MPS](https://img.shields.io/badge/Accelerator-Apple%20Silicon%20MPS-silver)
+
 
 **Deep Reinforcement Learning (DRL) for Intelligent Load Balancing and Cooling Optimization in Data Centers.**
 
